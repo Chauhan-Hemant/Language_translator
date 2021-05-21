@@ -1,1 +1,1 @@
-"# Language_translator" 
+# Language_translator
