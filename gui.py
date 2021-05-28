@@ -41,7 +41,7 @@ def translate():
     global dropdown
     global selected_lang
 
-    text_getted = selected_lang.cget('text')
+    text_getted = select.get()
     data = result.translate(to=str(text_getted))
     result_label = Label(result_frame, text=data)
     result_label.pack()
@@ -57,7 +57,8 @@ def clearText():
 
 
 def show():
-    selected_lang.config(text=select.get())
+    language = language_dictonary.get(select.get())
+    selected_lang.config(text=language)
 
 
 root = tk.Tk()
