@@ -1,101 +1,95 @@
 import tkinter as tk
 from tkinter import *
-from textblob import TextBlob
 
-language_dictonary = {
-    'af': 'Afrikaans', 'sq': 'Albanian', 'ar': 'Arabic', 'eu': 'Basque', 'be': 'Belarusian',
-    'bg': 'Bulgarian', 'ca': 'Catalan', 'zh': 'Chinese', 'hr': 'Croatian', 'cs': 'Czech',
-    'da': 'Danish', 'nl': 'Dutch', 'en': 'English', 'et': 'Estonian', 'fo': 'Faeroese', 'fa': 'Farsi',
-    'fi': 'Finnish', 'fr': 'French', 'gd': 'Gaelic', 'de': 'German', 'el': 'Greek', 'he': 'Hebrew',
-    'hi': 'Hindi', 'hu': 'Hungarian', 'is': 'Icelandic', 'id': 'Indonesian', 'ga': 'Irish',
-    'it': 'Italian', 'ja': 'Japanese', 'ko': 'Korean', 'ku': 'Kurdish', 'lv': 'Latvian',
-    'lt': 'Lithuanian', 'mk': 'Macedonian', 'ml': 'Malayalam', 'ms': 'Malaysian', 'mt': 'Maltese',
-    'no': 'Norwegian', 'nb': 'Norwegian', 'pl': 'Polish', 'pt': 'Portuguese', 'pa': 'Punjabi',
-    'rm': 'Rhaeto', 'ro': 'Romanian', 'ru': 'Russian', 'sr': 'Serbian', 'sk': 'Slovak',
-    'sl': 'Slovenian', 'sb': 'Sorbian', 'es': 'Spanish', 'sv': 'Swedish', 'th': 'Thai',
-    'ts': 'Tsonga', 'tn': 'Tswana', 'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 've': 'Venda',
-    'vi': 'Vietnamese', 'cy': 'Welsh', 'xh': 'Xhosa', 'ji': 'Yiddish', 'zu': 'Zulu'
+from deep_translator import GoogleTranslator
+from langdetect import detect, LangDetectException
+
+# Language dictionary (code → full name)
+language_dictionary = {
+    'af': 'Afrikaans', 'sq': 'Albanian', 'ar': 'Arabic', 'bg': 'Bulgarian',
+    'bn': 'Bengali', 'ca': 'Catalan', 'zh-cn': 'Chinese (Simplified)',
+    'zh-tw': 'Chinese (Traditional)', 'cs': 'Czech', 'da': 'Danish',
+    'nl': 'Dutch', 'en': 'English', 'et': 'Estonian', 'fi': 'Finnish',
+    'fr': 'French', 'de': 'German', 'el': 'Greek', 'gu': 'Gujarati',
+    'he': 'Hebrew', 'hi': 'Hindi', 'hu': 'Hungarian', 'id': 'Indonesian',
+    'it': 'Italian', 'ja': 'Japanese', 'kn': 'Kannada', 'ko': 'Korean',
+    'ml': 'Malayalam', 'mr': 'Marathi', 'ne': 'Nepali', 'no': 'Norwegian',
+    'pa': 'Punjabi', 'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian',
+    'ru': 'Russian', 'es': 'Spanish', 'sv': 'Swedish', 'ta': 'Tamil',
+    'te': 'Telugu', 'th': 'Thai', 'tr': 'Turkish', 'uk': 'Ukrainian',
+    'ur': 'Urdu', 'vi': 'Vietnamese'
 }
 
+# Reverse dictionary (Language name → code)
+name_to_code = {value: key for key, value in language_dictionary.items()}
 
-def getTextInput():
-    """
-    Function to take the input from the textbox and detect the language of the text
-    """
-    global language
-    global result
+def detect_language():
+    try:
+        input_text = text.get("1.0", END).strip()
+        if not input_text:
+            result_label.config(text="Please enter some text.")
+            return
+        detected_code = detect(input_text)   # ✅ pass the string
+        language_name = language_dictionary.get(detected_code, detected_code)
+        result_label.config(
+            text=f"Detected Language: {language_name} ({detected_code})"
+        )
+    except LangDetectException:
+        result_label.config(text="Could not detect language. Enter more text.")
 
-    result = TextBlob(str(text.get('1.0', 'end')))
-    lang_detected = result.detect_language()
-
-    for key in language_dictonary:
-        if key == lang_detected:
-            language = language_dictonary[key]
-    result_label = Label(result_frame, text=str(f"The above text is in {language} Language"))
-    result_label.pack()
-
-
-def translate():
-    global language
-    global result
-    global dropdown
-    global selected_lang
-
-    text_getted = select.get()
-    data = result.translate(to=str(text_getted))
-    result_label = Label(result_frame, text=data)
-    result_label.pack()
-
-
-def clearText():
-    """
-    Function to clear the textbox and output section
-    """
-    text.delete('1.0', 'end')
-    for widget in result_frame.winfo_children():
-        widget.destroy()
+def translate_text():
+    try:
+        input_text = text.get("1.0", END).strip()
+        if not input_text:
+            result_label.config(text="Please enter text.")
+            return
+        selected_language_name = selected_language.get()
+        if selected_language_name == "Select Language":
+            result_label.config(text="Please select a target language.")
+            return
+        target_code = name_to_code[selected_language_name]
+        translated = GoogleTranslator(source='auto', target=target_code).translate(input_text)
+        result_label.config(text=f"Translated Text:\n\n{translated}")
+    except Exception as e:
+        result_label.config(text=f"Translation Error:\n{e}")
 
 
-def show():
-    language = language_dictonary.get(select.get())
-    selected_lang.config(text=language)
+def clear_text():
+    text.delete("1.0", END)
+    result_label.config(text="")
 
+
+# ---------------- GUI ---------------- #
 
 root = tk.Tk()
-root.title("Text Translator")
+root.title("Language Translator")
+root.geometry("700x600")
+root.resizable(False, False)
 
-Label(root, text="Enter Text to Translate", padx=25, pady=10, font=("", 15), fg='green').pack()
+Label(root, text="Enter Text to Translate",
+      font=("Arial", 16), fg="green").pack(pady=10)
 
-scroll = Scrollbar(root)
-scroll.pack(side=RIGHT, fill=Y)
+text = Text(root, height=10, width=70)
+text.pack(pady=10)
 
-text = Text(root)
-text.pack()
+Button(root, text="Detect Language",
+       fg="blue", command=detect_language).pack(pady=5)
 
-text.config(yscrollcommand=scroll.set)
-scroll.config(command=text.yview)
+Label(root, text="Select Target Language").pack()
 
-submit_btn = Button(root, text='Detect Language', fg='green', command=getTextInput)
-submit_btn.pack()
+selected_language = StringVar()
+selected_language.set("Select Language")
 
-select = StringVar()
-select.set('Select Language')
-dropdown = OptionMenu(root, select, *language_dictonary)
-dropdown.pack()
+"""Dropdown with all existing language with there code"""
+OptionMenu(root, selected_language, *language_dictionary.values()).pack(pady=5)
 
-button = Button(root, text="Get Selected Language", command=show).pack()
+Button(root, text="Translate",
+       fg="green", command=translate_text).pack(pady=5)
 
-selected_lang = Label(root, text='')
-selected_lang.pack()
+Button(root, text="Clear",
+       fg="red", command=clear_text).pack(pady=5)
 
-submit_btn = Button(root, text='Translate', fg='green', command=translate)
-submit_btn.pack()
+result_label = Label(root, text="", wraplength=650, justify="left")
+result_label.pack(pady=20)
 
-reset_button = Button(root, text="Clear", fg='red', command=clearText)
-reset_button.pack()
-
-result_frame = Frame(root, bg='white')
-result_frame.place(relwidth=0.8, relheight=0.2, relx=0.1, rely=0.7)
-
-root.minsize(800, 850)
 root.mainloop()
