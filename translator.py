@@ -1,26 +1,59 @@
-from textblob import TextBlob
+from deep_translator import GoogleTranslator
+from langdetect import detect, LangDetectException
 
-text_entered = TextBlob(input("Enter text :\n"))
-lang_detected = text_entered.detect_language()
-
-language_dictonary = {
-    'af': 'Afrikaans', 'sq': 'Albanian', 'ar': 'Arabic', 'eu': 'Basque', 'be': 'Belarusian',
-    'bg': 'Bulgarian', 'ca': 'Catalan', 'zh': 'Chinese', 'hr': 'Croatian', 'cs': 'Czech',
-    'da': 'Danish', 'nl': 'Dutch', 'en': 'English', 'et': 'Estonian', 'fo': 'Faeroese', 'fa': 'Farsi',
-    'fi': 'Finnish', 'fr': 'French', 'gd': 'Gaelic', 'de': 'German', 'el': 'Greek', 'he': 'Hebrew',
-    'hi': 'Hindi', 'hu': 'Hungarian', 'is': 'Icelandic', 'id': 'Indonesian', 'ga': 'Irish',
-    'it': 'Italian', 'ja': 'Japanese', 'ko': 'Korean', 'ku': 'Kurdish', 'lv': 'Latvian',
-    'lt': 'Lithuanian', 'mk': 'Macedonian', 'ml': 'Malayalam', 'ms': 'Malaysian', 'mt': 'Maltese',
-    'no': 'Norwegian', 'nb': 'Norwegian', 'pl': 'Polish', 'pt': 'Portuguese', 'pa': 'Punjabi',
-    'rm': 'Rhaeto', 'ro': 'Romanian', 'ru': 'Russian', 'sr': 'Serbian', 'sk': 'Slovak',
-    'sl': 'Slovenian', 'sb': 'Sorbian', 'es': 'Spanish', 'sv': 'Swedish', 'th': 'Thai',
-    'ts': 'Tsonga', 'tn': 'Tswana', 'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 've': 'Venda',
-    'vi': 'Vietnamese', 'cy': 'Welsh', 'xh': 'Xhosa', 'ji': 'Yiddish', 'zu': 'Zulu'
+language_dictionary = {
+    'af': 'Afrikaans', 'sq': 'Albanian', 'ar': 'Arabic', 'bg': 'Bulgarian',
+    'bn': 'Bengali', 'ca': 'Catalan', 'zh-cn': 'Chinese (Simplified)',
+    'zh-tw': 'Chinese (Traditional)', 'cs': 'Czech', 'da': 'Danish',
+    'nl': 'Dutch', 'en': 'English', 'et': 'Estonian', 'fi': 'Finnish',
+    'fr': 'French', 'de': 'German', 'el': 'Greek', 'gu': 'Gujarati',
+    'he': 'Hebrew', 'hi': 'Hindi', 'hu': 'Hungarian', 'id': 'Indonesian',
+    'it': 'Italian', 'ja': 'Japanese', 'kn': 'Kannada', 'ko': 'Korean',
+    'ml': 'Malayalam', 'mr': 'Marathi', 'ne': 'Nepali', 'no': 'Norwegian',
+    'pa': 'Punjabi', 'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian',
+    'ru': 'Russian', 'es': 'Spanish', 'sv': 'Swedish', 'ta': 'Tamil',
+    'te': 'Telugu', 'th': 'Thai', 'tr': 'Turkish', 'uk': 'Ukrainian',
+    'ur': 'Urdu', 'vi': 'Vietnamese'
 }
 
-for key in language_dictonary:
-    if key == lang_detected:
-        print(language_dictonary[key], "language Detected")
+def detect_language(text):
+    try:
+        detected_code = detect(text)
+        language_name = language_dictionary.get(detected_code, detected_code)
+        return detected_code, language_name
+    except LangDetectException:
+        return None, "Could not detect language"
 
-lang = TextBlob(input('Enter the language code you want to translate the text into \n'))
-print(text_entered.translate(to=str(lang)))
+
+def translate_text(text, target_lang):
+    try:
+        translated = GoogleTranslator(source='auto', target=target_lang).translate(text)
+        return translated
+    except Exception as e:
+        return f"Translation Error: {e}"
+
+
+def main():
+
+    input_text = input("Enter text: ").strip()
+
+    if not input_text:
+        print("No text entered.")
+        return
+
+    code, language = detect_language(input_text)
+    if code:
+        print(f"\nDetected Language: {language} ({code})")
+    else:
+        print(language)
+        return
+
+    target_lang = input("\nEnter target language code (e.g., en, hi, fr, de, es): ").strip()
+
+    translated = translate_text(input_text, target_lang)
+
+    print("\nTranslated Text:")
+    print(translated)
+
+if __name__ == "__main__":
+    main()
